@@ -112,7 +112,7 @@ info "Starting essential package installation..."
 
 apt-get install -y \
   sudo curl wget git dialog ca-certificates gnupg lsb-release \
-  htop zip unzip net-tools openssl build-essential \
+  zram-tools zip unzip net-tools openssl build-essential \
   bash-completion unattended-upgrades \
   || die "Package installation failed"
 
