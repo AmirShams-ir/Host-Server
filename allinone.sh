@@ -165,6 +165,17 @@ if ! swapon --show | grep -q swap; then
 fi
 
 # ==============================================================================
+# Zram Configuration
+# ==============================================================================
+info "Starting Zram configuration..."
+
+systemctl start zramswap.service
+systemctl enable zramswap.service
+systemctl status zramswap.service
+
+ok "Zram created"
+
+# ==============================================================================
 # Ultra Kernel & Network Tuning (Adaptive)
 # ==============================================================================
 info "Applying Ultra Kernel Tuning..."
