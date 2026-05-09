@@ -137,12 +137,21 @@ if ! swapon --show | grep -q swap; then
   chmod 600 /swapfile
   mkswap /swapfile >/dev/null
   swapon /swapfile
-  grep -q "/swapfile" /etc/fstab || echo "/swapfile none swap sw 0 0" >> /etc/fstab
+  grep -q "/swapfile" /etc/fstab || echo "/swapfile none swap sw,pri=10 0 0" >> /etc/fstab
 
   rept "Swap created and enabled"
 else
   warn "Swap already active"
 fi
+
+# ==============================================================================
+# Zram Configuration
+# ==============================================================================
+info "Starting Zram configuration..."
+
+systemctl start zramswap.service
+systemctl enable zramswap.service
+systemctl status zramswap.service
 
 # ==============================================================================
 # Sysctl Baseline
