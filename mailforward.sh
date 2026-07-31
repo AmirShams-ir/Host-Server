@@ -1034,31 +1034,6 @@ restore_backup() {
 
 }
 
-# ==============================================================================
-# Optional Restore
-# ==============================================================================
-
-echo
-
-read -rp "Restore previous configuration? [y/N]: " ANSWER
-
-case "$ANSWER" in
-
-    y|Y|yes|YES)
-
-        restore_backup
-
-    ;;
-
-    *)
-
-        info "Keeping current configuration."
-
-    ;;
-
-esac
-
-echo
 
 # ==============================================================================
 # Display Important Parameters
