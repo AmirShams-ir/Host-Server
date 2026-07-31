@@ -482,6 +482,42 @@ read -rp "Destination Email: " DESTINATION
 
 echo
 
+# ==============================================================================
+# Catch-All
+# ==============================================================================
+
+echo "Enable Catch-All?"
+
+echo "  1) Yes"
+
+echo "  2) No"
+
+echo
+
+read -rp "Select [1-2]: " CATCH_ALL
+
+case "$CATCH_ALL" in
+
+    1|y|Y|yes|YES)
+
+        ENABLE_CATCH_ALL=true
+
+        ok "Catch-All enabled."
+
+    ;;
+
+    *)
+
+        ENABLE_CATCH_ALL=false
+
+        ok "Catch-All disabled."
+
+    ;;
+
+esac
+
+echo
+
 ok "Domain      : $DOMAIN"
 ok "Destination : $DESTINATION"
 
