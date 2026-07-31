@@ -564,6 +564,15 @@ do
 
 done
 
+if [[ "$ENABLE_CATCH_ALL" == true ]]; then
+
+    printf "%-35s %s\n" \
+        "@${DOMAIN}" \
+        "$DESTINATION" \
+        >> "$POSTFIX_VIRTUAL"
+
+fi
+
 ok "Forward rules created."
 
 echo
