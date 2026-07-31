@@ -291,7 +291,7 @@ fi
 # Reverse DNS
 # ==============================================================================
 
-PUBLIC_IP="$(hostname -I | awk '{print $1}')"
+PUBLIC_IP=$(curl -4 -s ifconfig.me)
 
 PTR="$(dig +short -x "$PUBLIC_IP" 2>/dev/null || true)"
 
@@ -559,64 +559,6 @@ ok "Postfix reloaded."
 echo
 
 # ==============================================================================
-# Display Rules
-# ==============================================================================
-
-info "Current Forward Rules"
-
-echo
-
-grep "@$DOMAIN" "$POSTFIX_VIRTUAL" || true
-
-echo
-
-ok "Mail Forward successfully configured."
-
-echo
-
-# ==============================================================================
-# Duplicate Check
-# ==============================================================================
-
-info "Checking existing forward rules..."
-
-if grep -q "@${DOMAIN}[[:space:]]\+${DESTINATION}" "$POSTFIX_VIRTUAL"; then
-
-    warn "Forward rule already exists."
-
-else
-
-    info "Adding forward rules..."
-
-    for USER in "${ALIASES[@]}"; do
-
-        printf "%-35s %s\n" \
-            "${USER}@${DOMAIN}" \
-            "$DESTINATION" \
-            >> "$POSTFIX_VIRTUAL"
-
-    done
-
-    ok "Forward rules added."
-
-fi
-
-echo
-
-# ==============================================================================
-# Build Virtual Database
-# ==============================================================================
-
-info "Building virtual alias database..."
-
-postmap "$POSTFIX_VIRTUAL" \
-    || die "Unable to generate virtual.db"
-
-ok "Database updated."
-
-echo
-
-# ==============================================================================
 # Postfix Configuration Check
 # ==============================================================================
 
@@ -626,19 +568,6 @@ postfix check \
     || die "Postfix configuration contains errors."
 
 ok "Configuration is valid."
-
-echo
-
-# ==============================================================================
-# Reload Service
-# ==============================================================================
-
-info "Reloading Postfix..."
-
-systemctl reload postfix \
-    || die "Unable to reload Postfix."
-
-ok "Postfix reloaded."
 
 echo
 
@@ -686,27 +615,6 @@ EOF
 ok "Test email submitted."
 
 echo
-
-# ==============================================================================
-# Mail Queue
-# ==============================================================================
-
-info "Checking mail queue..."
-
-QUEUE="$(postqueue -p)"
-
-if echo "$QUEUE" | grep -q "Mail queue is empty"; then
-
-    ok "Mail queue is empty."
-
-else
-
-    warn "There are messages waiting in queue."
-
-    echo
-    echo "$QUEUE"
-    echo
-fi
 
 # ==============================================================================
 # Queue Flush
@@ -876,19 +784,6 @@ else
     echo
 fi
 
-# ==============================================================================
-# Queue Flush
-# ==============================================================================
-
-info "Flushing queue..."
-
-postqueue -f
-
-sleep 2
-
-ok "Queue flushed."
-
-echo
 
 # ==============================================================================
 # Verify Virtual Database
