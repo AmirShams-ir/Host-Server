@@ -955,26 +955,6 @@ restore_backup() {
 
 
 # ==============================================================================
-# Display Important Parameters
-# ==============================================================================
-
-info "Important Postfix Parameters"
-
-echo
-
-postconf \
-myhostname \
-mydomain \
-myorigin \
-virtual_alias_maps \
-inet_interfaces \
-inet_protocols \
-relayhost \
-mydestination
-
-echo
-
-# ==============================================================================
 # Mail Queue
 # ==============================================================================
 
