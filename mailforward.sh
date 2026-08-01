@@ -207,8 +207,12 @@ systemctl is-active --quiet postfix \
 ok "Postfix service is active."
 
 # ==============================================================================
-# Port 25 Check
+# Port 25 & UFW Checking
 # ==============================================================================
+
+info "SMTP UFW Rule..."
+
+ufw allow 25
 
 info "Checking SMTP listener..."
 
