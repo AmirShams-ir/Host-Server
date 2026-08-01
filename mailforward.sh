@@ -286,9 +286,9 @@ echo
 
 MAILNAME="/etc/mailname"
 
-CURRENT_DOMAIN="$(hostname -d)"
+DOMAIN="$(hostname -d)"
 
-if [[ -n "$CURRENT_DOMAIN" ]]; then
+if [[ -n "$DOMAIN" ]]; then
 
     echo "$MAIL_FQDN" > "$MAILNAME"
 
