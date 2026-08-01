@@ -322,27 +322,45 @@ else
 fi
 
 # ==============================================================================
-# Reverse DNS
+# Reverse DNS (FCrDNS)
 # ==============================================================================
 
 PUBLIC_IP="$(curl -4 -fsSL https://api.ipify.org || true)"
 
 if [[ -z "$PUBLIC_IP" ]]; then
+
     warn "Unable to detect public IP."
+
 else
 
     PTR="$(dig +short -x "$PUBLIC_IP" | head -n1)"
 
-    PTR_HOST="${PTR%.}"
+    if [[ -z "$PTR" ]]; then
 
-    A_IP="$(dig +short A "$PTR_HOST" | head -n1)"
+        warn "PTR record not found."
 
-    if [[ "$A_IP" == "$PUBLIC_IP" ]]; then
-        ok "FCrDNS verified."
     else
-        warn "PTR/A mismatch."
+
+        PTR_HOST="${PTR%.}"
+
+        ok "PTR : $PTR_HOST"
+
+        A_IP="$(dig +short A "$PTR_HOST" | head -n1)"
+
+        if [[ "$A_IP" == "$PUBLIC_IP" ]]; then
+
+            ok "FCrDNS verified."
+
+        else
+
+            warn "PTR/A mismatch."
+
+        fi
+
     fi
+
 fi
+
 # ==============================================================================
 # Internet Connectivity
 # ==============================================================================
