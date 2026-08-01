@@ -291,7 +291,7 @@ fi
 # Reverse DNS
 # ==============================================================================
 
-PUBLIC_IP=$(curl -4 -s ifconfig.me)
+PUBLIC_IP=$(curl -4 -fsSL https://api.ipify.org)
 
 PTR="$(dig +short -x "$PUBLIC_IP" 2>/dev/null || true)"
 
