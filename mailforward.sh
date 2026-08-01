@@ -174,7 +174,7 @@ if [[ "$POSTFIX_INSTALLED" == false ]]; then
 
     [[ -z "$DOMAIN" ]] && DOMAIN="localhost"
 
-    echo "postfix postfix/mailname string $DOMAIN" \
+    echo "postfix postfix/mailname string mail.$DOMAIN" \
         | debconf-set-selections
 
     echo "postfix postfix/main_mailer_type string 'Internet Site'" \
