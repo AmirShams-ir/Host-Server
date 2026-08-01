@@ -879,12 +879,12 @@ check() {
     if "$@" >/dev/null 2>&1; then
 
         ok "$TITLE"
-        ((PASSED++))
+        ((++PASSED))
 
     else
 
         warn "$TITLE"
-        ((FAILED++))
+        ((++FAILED))
 
     fi
 
@@ -1040,7 +1040,7 @@ printf "%-20s %s\n" "Virtual Map:" "$POSTFIX_VIRTUAL"
 
 printf "%-20s %s\n" "Hostname:" "$(hostname -f)"
 
-printf "%-20s %s\n" "Mail-Server:" "mail.$(hostname -f)"
+printf "%-20s %s\n" "Mail Server:" "mail.$(hostname -d)"
 
 printf "%-20s %s\n" "Postfix:" "$POSTFIX_VERSION"
 
