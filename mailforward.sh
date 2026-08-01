@@ -258,7 +258,7 @@ if [[ -n "$CURRENT_DOMAIN" ]]; then
 
     echo "$CURRENT_DOMAIN" > "$MAILNAME"
 
-    ok "Mailname: $CURRENT_DOMAIN"
+    ok "Mailname: mail.$CURRENT_DOMAIN"
 
 else
 
@@ -863,28 +863,6 @@ systemctl --no-pager --full status postfix \
 echo
 
 # ==============================================================================
-# Configuration Summary
-# ==============================================================================
-
-info "Configuration Summary"
-
-echo "------------------------------------------------------------"
-
-printf "%-20s %s\n" "Domain:" "$DOMAIN"
-
-printf "%-20s %s\n" "Forward To:" "$DESTINATION"
-
-printf "%-20s %s\n" "Virtual Map:" "$POSTFIX_VIRTUAL"
-
-printf "%-20s %s\n" "Hostname:" "$(hostname -f)"
-
-printf "%-20s %s\n" "Postfix:" "$POSTFIX_VERSION"
-
-echo "------------------------------------------------------------"
-
-echo
-
-# ==============================================================================
 # Verification
 # ==============================================================================
 
@@ -1043,5 +1021,29 @@ else
     warn "Configuration completed but requires attention."
 
 fi
+
+echo
+
+# ==============================================================================
+# Configuration Summary
+# ==============================================================================
+
+info "Configuration Summary"
+
+echo "------------------------------------------------------------"
+
+printf "%-20s %s\n" "Domain:" "$DOMAIN"
+
+printf "%-20s %s\n" "Forward To:" "$DESTINATION"
+
+printf "%-20s %s\n" "Virtual Map:" "$POSTFIX_VIRTUAL"
+
+printf "%-20s %s\n" "Hostname:" "$(hostname -f)"
+
+printf "%-20s %s\n" "Mail-Server:" "mail.$(hostname -f)"
+
+printf "%-20s %s\n" "Postfix:" "$POSTFIX_VERSION"
+
+echo "------------------------------------------------------------"
 
 echo
