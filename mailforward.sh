@@ -291,18 +291,19 @@ fi
 # Reverse DNS
 # ==============================================================================
 
-PUBLIC_IP=$(curl -4 -fsSL https://api.ipify.org)
+PUBLIC_IP="$(curl -4 -fsSL https://api.ipify.org || true)"
 
-PTR="$(dig +short -x "$PUBLIC_IP" 2>/dev/null || true)"
-
-if [[ -z "$PTR" ]]; then
-
-    warn "PTR record not found."
-
+if [[ -z "$PUBLIC_IP" ]]; then
+    warn "Unable to detect public IP."
 else
 
-    ok "PTR : $PTR"
+    PTR="$(dig +short -x "$PUBLIC_IP" | head -n1)"
 
+    if [[ -n "$PTR" ]]; then
+        ok "PTR : $PTR"
+    else
+        warn "PTR record not found."
+    fi
 fi
 
 # ==============================================================================
