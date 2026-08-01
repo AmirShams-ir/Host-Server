@@ -170,6 +170,7 @@ if [[ "$POSTFIX_INSTALLED" == false ]]; then
 
     info "Installing Postfix..."
 
+    HOSTNAME="$(hostname -f)"
     DOMAIN="$(hostname -d)"
 
     [[ -z "$DOMAIN" ]] && DOMAIN="localhost"
@@ -247,6 +248,39 @@ cp -a /etc/aliases \
 ok "Backup created."
 
 # ==============================================================================
+# Host FQDN
+# ==============================================================================
+
+HOST_FQDN="$(hostname -f)"
+
+if [[ -z "$HOST_FQDN" || "$HOST_FQDN" == "$(hostname -s)" ]]; then
+
+    die "Unable to detect Host FQDN."
+
+fi
+
+ok "Host FQDN : $HOST_FQDN"
+
+echo
+
+# ==============================================================================
+# Mail FQDN
+# ==============================================================================
+
+read -rp "Mail FQDN (example: mail.example.com): " MAIL_FQDN
+
+[[ "$MAIL_FQDN" =~ ^([A-Za-z0-9-]+\.)+[A-Za-z]{2,}$ ]] \
+    || die "Invalid Mail FQDN."
+
+if ! getent hosts "$MAIL_FQDN" >/dev/null; then
+    warn "Mail FQDN does not currently resolve."
+fi
+
+ok "Mail FQDN : $MAIL_FQDN"
+
+echo
+
+# ==============================================================================
 # Mailname
 # ==============================================================================
 
@@ -256,9 +290,9 @@ CURRENT_DOMAIN="$(hostname -d)"
 
 if [[ -n "$CURRENT_DOMAIN" ]]; then
 
-    echo "$CURRENT_DOMAIN" > "$MAILNAME"
+    echo "$MAIL_FQDN" > "$MAILNAME"
 
-    ok "Mailname: mail.$CURRENT_DOMAIN"
+    ok "Mailname: $MAIL_FQDN"
 
 else
 
@@ -299,12 +333,15 @@ else
 
     PTR="$(dig +short -x "$PUBLIC_IP" | head -n1)"
 
-    if [[ -n "$PTR" ]]; then
-        ok "PTR : $PTR"
+    PTR_HOST="${PTR%.}"
+
+    A_IP="$(dig +short A "$PTR_HOST" | head -n1)"
+
+    if [[ "$A_IP" == "$PUBLIC_IP" ]]; then
+        ok "FCrDNS verified."
     else
-        warn "PTR record not found."
+        warn "PTR/A mismatch."
     fi
-fi
 
 # ==============================================================================
 # Internet Connectivity
@@ -343,15 +380,12 @@ postconf -n > "$BACKUP_DIR/$DATE/postconf.before"
 # Basic Configuration
 # ==============================================================================
 
-DOMAIN="$(hostname -d)"
-HOSTNAME="$(hostname -f)"
-
-postconf -e "myhostname = $HOSTNAME"
+postconf -e "myhostname = $MAIL_FQDN"
 postconf -e "mydomain = $DOMAIN"
 postconf -e "myorigin = \$mydomain"
-
 postconf -e "inet_interfaces = all"
 postconf -e "inet_protocols = all"
+postconf -e 'smtpd_banner = $myhostname ESMTP $mail_name (Debian/GNU)'
 
 # ==============================================================================
 # Local Delivery
@@ -547,7 +581,7 @@ touch "$POSTFIX_VIRTUAL"
 
 # Remove old entries for this domain
 
-sed -i "\|@$DOMAIN|d" "$POSTFIX_VIRTUAL"
+sed -i "/@$DOMAIN[[:space:]]/d" "$POSTFIX_VIRTUAL"
 
 # ==============================================================================
 # Build Forward Rules
@@ -575,6 +609,30 @@ if [[ "$ENABLE_CATCH_ALL" == true ]]; then
 fi
 
 ok "Forward rules created."
+
+echo
+
+# ==============================================================================
+# Build virtual_alias_domains Automatically
+# ==============================================================================
+
+info "Updating virtual_alias_domains..."
+
+DOMAINS="$(
+awk '
+$1 !~ /^#/ && NF {
+    split($1,a,"@")
+    if(length(a[2]))
+        print a[2]
+}
+' "$POSTFIX_VIRTUAL" \
+| sort -u \
+| paste -sd, -
+)"
+
+postconf -e "virtual_alias_domains = $DOMAINS"
+
+ok "virtual_alias_domains updated."
 
 echo
 
@@ -894,7 +952,7 @@ check "Postfix Installed" command -v postconf
 
 check "Postfix Running" systemctl is-active --quiet postfix
 
-check "Port 25 Listening" ss -lnt
+check "Port 25 Listening" bash -c "ss -lnt | grep -q ':25 '"
 
 check "Virtual Database" test -f /etc/postfix/virtual.db
 
@@ -1018,9 +1076,9 @@ printf "%-20s %s\n" "Forward To:" "$DESTINATION"
 
 printf "%-20s %s\n" "Virtual Map:" "$POSTFIX_VIRTUAL"
 
-printf "%-20s %s\n" "Hostname:" "$(hostname -f)"
+printf "%-20s %s\n" "Host FQDN:" "$HOST_FQDN"
 
-printf "%-20s %s\n" "Mail Server:" "mail.$(hostname -d)"
+printf "%-20s %s\n" "Mail FQDN:" "$MAIL_FQDN"
 
 printf "%-20s %s\n" "Postfix:" "$POSTFIX_VERSION"
 
