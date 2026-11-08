@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # -----------------------------------------------------------------------------
-# Description: Configure Debian repositories with prioritized Iranian mirrors
-#              and preserve Armbian repositories on Armbian systems.
+# Description: Configure official repositories first, official CDN alternatives
+#              second, and Iranian mirrors last; preserve Armbian repositories.
 #
 # Supports:
 #   - Debian 12 Bookworm
@@ -186,7 +186,7 @@ if $IS_DEBIAN; then
 
     # --------------------------------------------------------------------------
     # Official Debian repositories
-    # Fallback only
+    # Highest priority
     # --------------------------------------------------------------------------
 
     cat > "$MAIN_LIST" <<EOF
@@ -205,19 +205,27 @@ EOF
 
     cat > "$IR_LIST" <<EOF
 # ==============================================================================
-# Iranian Debian Mirrors
-# Primary repositories
+# Official Debian CDN alternative
+# Official Debian infrastructure; archive signature checks remain enabled.
 # ==============================================================================
 
-deb http://mirror.cdn.ir/repository/debian $CODENAME $COMPONENTS
-deb http://mirror.cdn.ir/repository/debian $CODENAME-updates $COMPONENTS
-deb http://mirror.cdn.ir/repository/debian-security $CODENAME-security $COMPONENTS
+deb https://cdn-aws.deb.debian.org/debian $CODENAME $COMPONENTS
+deb https://cdn-aws.deb.debian.org/debian $CODENAME-updates $COMPONENTS
+deb https://cdn-aws.deb.debian.org/debian-security $CODENAME-security $COMPONENTS
 
-deb http://repo.iut.ac.ir/debian $CODENAME $COMPONENTS
-deb http://repo.iut.ac.ir/debian $CODENAME-updates $COMPONENTS
+# ==============================================================================
+# Iranian Debian mirrors - last-resort availability fallback
+# ==============================================================================
 
-deb http://mirror.arvancloud.ir/debian $CODENAME $COMPONENTS
-deb http://mirror.arvancloud.ir/debian-security $CODENAME-security $COMPONENTS
+deb https://mirror.cdn.ir/repository/debian $CODENAME $COMPONENTS
+deb https://mirror.cdn.ir/repository/debian $CODENAME-updates $COMPONENTS
+deb https://mirror.cdn.ir/repository/debian-security $CODENAME-security $COMPONENTS
+
+deb https://repo.iut.ac.ir/debian $CODENAME $COMPONENTS
+deb https://repo.iut.ac.ir/debian $CODENAME-updates $COMPONENTS
+
+deb https://mirror.arvancloud.ir/debian $CODENAME $COMPONENTS
+deb https://mirror.arvancloud.ir/debian-security $CODENAME-security $COMPONENTS
 EOF
 
     # --------------------------------------------------------------------------
@@ -226,27 +234,32 @@ EOF
 
     cat > "$PIN_FILE" <<EOF
 # ==============================================================================
-# Debian Mirror Priority
+# Debian Repository Priority
+# Official archive first, official CDN second, Iranian mirrors last.
 # ==============================================================================
 
 Package: *
-Pin: origin "mirror.cdn.ir"
-Pin-Priority: 900
-
-Package: *
-Pin: origin "repo.iut.ac.ir"
-Pin-Priority: 850
-
-Package: *
-Pin: origin "mirror.arvancloud.ir"
-Pin-Priority: 800
-
-Package: *
 Pin: origin "deb.debian.org"
-Pin-Priority: 400
+Pin-Priority: 1000
 
 Package: *
 Pin: origin "security.debian.org"
+Pin-Priority: 1000
+
+Package: *
+Pin: origin "cdn-aws.deb.debian.org"
+Pin-Priority: 900
+
+Package: *
+Pin: origin "mirror.cdn.ir"
+Pin-Priority: 500
+
+Package: *
+Pin: origin "repo.iut.ac.ir"
+Pin-Priority: 450
+
+Package: *
+Pin: origin "mirror.arvancloud.ir"
 Pin-Priority: 400
 EOF
 
@@ -332,18 +345,27 @@ EOF
 
     cat > "$IR_LIST" <<EOF
 # ==============================================================================
-# Iranian Ubuntu Mirrors
+# Official Ubuntu CDN alternative
+# Kept alongside the default official Ubuntu archive.
 # ==============================================================================
 
-deb http://mirror.cdn.ir/ubuntu $CODENAME $COMPONENTS
-deb http://mirror.cdn.ir/ubuntu $CODENAME-updates $COMPONENTS
-deb http://mirror.cdn.ir/ubuntu $CODENAME-security $COMPONENTS
+deb https://ubuntu-archive.trafficmanager.net/ubuntu $CODENAME $COMPONENTS
+deb https://ubuntu-archive.trafficmanager.net/ubuntu $CODENAME-updates $COMPONENTS
+deb https://ubuntu-archive.trafficmanager.net/ubuntu $CODENAME-backports $COMPONENTS
 
-deb http://repo.iut.ac.ir/ubuntu $CODENAME $COMPONENTS
-deb http://repo.iut.ac.ir/ubuntu $CODENAME-updates $COMPONENTS
-deb http://repo.iut.ac.ir/ubuntu $CODENAME-security $COMPONENTS
+# ==============================================================================
+# Iranian Ubuntu mirrors - last-resort availability fallback
+# ==============================================================================
 
-deb http://mirror.arvancloud.ir/ubuntu $CODENAME $COMPONENTS
+deb https://mirror.cdn.ir/ubuntu $CODENAME $COMPONENTS
+deb https://mirror.cdn.ir/ubuntu $CODENAME-updates $COMPONENTS
+deb https://mirror.cdn.ir/ubuntu $CODENAME-security $COMPONENTS
+
+deb https://repo.iut.ac.ir/ubuntu $CODENAME $COMPONENTS
+deb https://repo.iut.ac.ir/ubuntu $CODENAME-updates $COMPONENTS
+deb https://repo.iut.ac.ir/ubuntu $CODENAME-security $COMPONENTS
+
+deb https://mirror.arvancloud.ir/ubuntu $CODENAME $COMPONENTS
 EOF
 
     # --------------------------------------------------------------------------
@@ -352,27 +374,32 @@ EOF
 
     cat > "$PIN_FILE" <<EOF
 # ==============================================================================
-# Ubuntu Mirror Priority
+# Ubuntu Repository Priority
+# Official archive first, official CDN second, Iranian mirrors last.
 # ==============================================================================
 
 Package: *
-Pin: origin "mirror.cdn.ir"
-Pin-Priority: 900
-
-Package: *
-Pin: origin "repo.iut.ac.ir"
-Pin-Priority: 850
-
-Package: *
-Pin: origin "mirror.arvancloud.ir"
-Pin-Priority: 800
-
-Package: *
 Pin: origin "archive.ubuntu.com"
-Pin-Priority: 400
+Pin-Priority: 1000
 
 Package: *
 Pin: origin "security.ubuntu.com"
+Pin-Priority: 1000
+
+Package: *
+Pin: origin "ubuntu-archive.trafficmanager.net"
+Pin-Priority: 900
+
+Package: *
+Pin: origin "mirror.cdn.ir"
+Pin-Priority: 500
+
+Package: *
+Pin: origin "repo.iut.ac.ir"
+Pin-Priority: 450
+
+Package: *
+Pin: origin "mirror.arvancloud.ir"
 Pin-Priority: 400
 EOF
 
@@ -444,8 +471,9 @@ info "════════════════════════�
 rept "OS           : $PRETTY"
 rept "Architecture : $ARCH"
 rept "Debian base  : ${CODENAME:-N/A}"
-rept "IR Mirrors   : Enabled"
-rept "Official     : Fallback"
+rept "Official     : Highest priority"
+rept "CDN          : Official alternative"
+rept "IR Mirrors   : Last-resort fallback"
 rept "Armbian Repo : $IS_ARMBIAN"
 rept "APT IPv4     : Forced"
 info "══════════════════════════════════════════════════════════"
